@@ -1,0 +1,19 @@
+{
+  "name": "screenshot_uploader",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "module": "nodenext",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "clipboardy": "^4.0.0",
+    "dotenv": "^16.4.1"
+  }
+}
