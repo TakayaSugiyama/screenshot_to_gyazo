@@ -1,10 +1,10 @@
 import chokidar from "chokidar";
 import { readFileSync } from "fs";
-import clipboard from "clipboardy";
 import dotenv from "dotenv";
 dotenv.config({
   path: "./.env",
 });
+import { exec } from "child_process";
 
 const watcher = chokidar.watch(process.env.WATCH_DIRECTORY, {
   ignoreInitial: true,
@@ -32,9 +32,9 @@ const uploadToGyazo = async (path) => {
 const run = () => {
   watcher.on("add", async (event, _) => {
     const data = await uploadToGyazo(event);
-    if (data?.url) {
-      clipboard.writeSync(data.url);
-    }
+    if (!data?.url) return;
+
+    exec(`wl-copy ${data.url}`);
   });
 };
 

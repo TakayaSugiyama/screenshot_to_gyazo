@@ -13,7 +13,6 @@
   "license": "MIT",
   "dependencies": {
     "chokidar": "^3.6.0",
-    "clipboardy": "^4.0.0",
     "dotenv": "^16.4.1"
   }
 }
