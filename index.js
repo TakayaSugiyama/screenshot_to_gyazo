@@ -6,9 +6,24 @@ dotenv.config({
 });
 import { exec } from "child_process";
 
-const watcher = chokidar.watch(process.env.WATCH_DIRECTORY, {
+import { realpathSync } from "fs";
+
+const watchPath = realpathSync(process.env.WATCH_DIRECTORY);
+const watcher = chokidar.watch(watchPath, {
   ignoreInitial: true,
-  awaitWriteFinish: true,
+  awaitWriteFinish: {
+    stabilityThreshold: 2000,
+    pollInterval: 100
+  },
+  persistent: true,
+});
+
+watcher.on('ready', () => {
+  console.log('File watcher is ready');
+});
+
+watcher.on('error', (error) => {
+  console.error('File watcher error:', error);
 });
 
 const buildFormData = (path) => {
@@ -22,19 +37,38 @@ const buildFormData = (path) => {
 };
 
 const uploadToGyazo = async (path) => {
-  const data = await fetch(`https://upload.gyazo.com/api/upload`, {
-    method: "POST",
-    body: buildFormData(path),
-  });
-  return data.json();
+  try {
+    const response = await fetch(`https://upload.gyazo.com/api/upload`, {
+      method: "POST",
+      body: buildFormData(path),
+    });
+    
+    if (!response.ok) {
+      console.error(`Gyazo upload error: ${response.status}`);
+      return null;
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Upload failed:`, error.message);
+    return null;
+  }
 };
 
 const run = () => {
+  if (!process.env.WATCH_DIRECTORY) {
+    console.error('WATCH_DIRECTORY is not set in .env');
+    return;
+  }
+  
+  console.log(`Watching: ${watchPath}`);
+  
   watcher.on("add", async (event, _) => {
     const data = await uploadToGyazo(event);
-    if (!data?.url) return;
-
-    exec(`wl-copy ${data.url}`);
+    if (data?.url) {
+      console.log(`Uploaded: ${data.url}`);
+      exec(`wl-copy ${data.url}`);
+    }
   });
 };
 
