@@ -29,6 +29,7 @@ watcher.on('error', (error) => {
 const buildFormData = (path) => {
   const formData = new FormData();
   formData.append("access_token", `${process.env.TOKEN}`);
+  formData.append("app", process.env.APP_NAME ?? "screenshot_to_gyazo");
   const file = readFileSync(path);
   formData.append("imagedata", new Blob([file], { type: "image/png" }), {
     filename: path,
