@@ -1,23 +1,32 @@
-import dotenv from "dotenv";
-import { realpathSync } from "fs";
+import { readFileSync, realpathSync } from "fs";
+import { parse } from "yaml";
 
-dotenv.config({
-  path: "./.env",
-});
+const CONFIG_PATH = "./config.yml";
 
-const requireEnv = (name) => {
-  const value = process.env[name];
+const loadConfigFile = () => {
+  try {
+    return parse(readFileSync(CONFIG_PATH, "utf8")) ?? {};
+  } catch (error) {
+    console.error(`Failed to load ${CONFIG_PATH}:`, error.message);
+    process.exit(1);
+  }
+};
+
+const raw = loadConfigFile();
+
+const requireKey = (name) => {
+  const value = raw[name];
   if (!value) {
-    console.error(`${name} is not set in .env`);
+    console.error(`${name} is not set in ${CONFIG_PATH}`);
     process.exit(1);
   }
   return value;
 };
 
 const config = Object.freeze({
-  token: requireEnv("TOKEN"),
-  watchDirectory: realpathSync(requireEnv("WATCH_DIRECTORY")),
-  appName: process.env.APP_NAME ?? "screenshot_to_gyazo",
+  token: requireKey("token"),
+  watchDirectory: realpathSync(requireKey("watch_directory")),
+  appName: raw.app_name ?? "screenshot_to_gyazo",
   uploadUrl: "https://upload.gyazo.com/api/upload",
   awaitWriteFinish: Object.freeze({
     stabilityThreshold: 2000,
