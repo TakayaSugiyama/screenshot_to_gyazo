@@ -1,20 +1,11 @@
 import chokidar from "chokidar";
 import { readFileSync } from "fs";
-import dotenv from "dotenv";
-dotenv.config({
-  path: "./.env",
-});
 import { exec } from "child_process";
+import config from "./config.js";
 
-import { realpathSync } from "fs";
-
-const watchPath = realpathSync(process.env.WATCH_DIRECTORY);
-const watcher = chokidar.watch(watchPath, {
+const watcher = chokidar.watch(config.watchDirectory, {
   ignoreInitial: true,
-  awaitWriteFinish: {
-    stabilityThreshold: 2000,
-    pollInterval: 100
-  },
+  awaitWriteFinish: config.awaitWriteFinish,
   persistent: true,
 });
 
@@ -28,8 +19,8 @@ watcher.on('error', (error) => {
 
 const buildFormData = (path) => {
   const formData = new FormData();
-  formData.append("access_token", `${process.env.TOKEN}`);
-  formData.append("app", process.env.APP_NAME ?? "screenshot_to_gyazo");
+  formData.append("access_token", config.token);
+  formData.append("app", config.appName);
   const file = readFileSync(path);
   formData.append("imagedata", new Blob([file], { type: "image/png" }), {
     filename: path,
@@ -39,7 +30,7 @@ const buildFormData = (path) => {
 
 const uploadToGyazo = async (path) => {
   try {
-    const response = await fetch(`https://upload.gyazo.com/api/upload`, {
+    const response = await fetch(config.uploadUrl, {
       method: "POST",
       body: buildFormData(path),
     });
@@ -57,12 +48,7 @@ const uploadToGyazo = async (path) => {
 };
 
 const run = () => {
-  if (!process.env.WATCH_DIRECTORY) {
-    console.error('WATCH_DIRECTORY is not set in .env');
-    return;
-  }
-  
-  console.log(`Watching: ${watchPath}`);
+  console.log(`Watching: ${config.watchDirectory}`);
   
   watcher.on("add", async (event, _) => {
     const data = await uploadToGyazo(event);
