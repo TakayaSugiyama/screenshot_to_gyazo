@@ -1,4 +1,6 @@
 # Gyazoのアクセストークン
+# 1Passwordを使う場合は op://<vault>/<item>/<field> 形式で指定すると、起動時に op read で取得する
+# 例: token: op://Private/Gyazo/credential
 token: your_gyazo_access_token_here
 # 監視するスクリーンショットのディレクトリ
 watch_directory: /path/to/screenshot/directory

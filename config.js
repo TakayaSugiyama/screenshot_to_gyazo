@@ -1,3 +1,4 @@
+import { execFileSync } from "child_process";
 import { readFileSync, realpathSync } from "fs";
 import { parse } from "yaml";
 
@@ -12,7 +13,31 @@ const loadConfigFile = () => {
   }
 };
 
-const raw = loadConfigFile();
+// "op://vault/item/field" 形式の値は 1Password CLI で解決する
+const resolveSecret = (name, value) => {
+  if (typeof value !== "string" || !value.startsWith("op://")) {
+    return value;
+  }
+  try {
+    return execFileSync("op", ["read", "--no-newline", value], {
+      encoding: "utf8",
+      stdio: ["inherit", "pipe", "pipe"],
+    });
+  } catch (error) {
+    console.error(
+      `Failed to resolve ${name} from 1Password:`,
+      error.stderr?.trim() || error.message,
+    );
+    process.exit(1);
+  }
+};
+
+const raw = Object.fromEntries(
+  Object.entries(loadConfigFile()).map(([name, value]) => [
+    name,
+    resolveSecret(name, value),
+  ]),
+);
 
 const requireKey = (name) => {
   const value = raw[name];
